@@ -1,14 +1,17 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/mdamavandi/jacket-temperature/structs"
 )
 
-const url = "https://data.climacell.co/v4/timelines?location=&fields=temperature&timesteps=1h"
+const url = "https://data.climacell.co/v4/timelines?location=&fields=temperature&timesteps=1h&units=imperial"
 
 func insertLocale(url string, lat float32, lon float32) string {
 	return url[:48] + fmt.Sprintf("%f", lat) + "," + fmt.Sprintf("%f", lon) + url[48:]
@@ -33,9 +36,26 @@ func main() {
 	}
 
 	responseBytes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		log.Fatalf("error reading HTTP response body: %v", err)
+	// if err != nil {
+	// 	log.Fatalf("error reading HTTP response body: %v", err)
+	// }
+
+	// log.Println("We got the response:", string(responseBytes))
+	var weatherSamples structs.ClimaCellPayload
+	if err := json.Unmarshal(responseBytes, &weatherSamples); err != nil {
+		log.Fatalf("error deserializing weather data")
 	}
 
-	log.Println("We got the response:", string(responseBytes))
+	for _, timeline := range weatherSamples.Data.Timelines {
+		log.Println("we're here")
+		if timeline.Intervals != nil {
+			for _, data := range timeline.Intervals {
+				log.Printf("The temperature at %s is %f degrees F", data.StartTime, data.Values.Temperature)
+			}
+		} else {
+			log.Printf("No temperature data available between %s and %s", timeline.StartTime, timeline.EndTime)
+		}
+	}
+
+	// log.Println(weatherSamples)
 }
