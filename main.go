@@ -11,10 +11,10 @@ import (
 	"github.com/mdamavandi/jacket-temperature/structs"
 )
 
-const url = "https://data.climacell.co/v4/timelines?location=&fields=temperature&timesteps=1h&units=imperial"
+const url = "https://api.tomorrow.io/v4/timelines?location=&fields=temperature&units=imperial&timesteps=1h"
 
 func insertLocale(url string, lat float32, lon float32) string {
-	return url[:48] + fmt.Sprintf("%f", lat) + "," + fmt.Sprintf("%f", lon) + url[48:]
+	return url[:46] + fmt.Sprintf("%f", lat) + "," + fmt.Sprintf("%f", lon) + url[46:]
 }
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 	}
 
 	req.Header.Add("content-type", "application/json")
-	req.Header.Add("apikey", os.Getenv("CLIMACELL_API_KEY"))
+	req.Header.Add("apikey", os.Getenv("TOMORROW_API_KEY"))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -56,6 +56,4 @@ func main() {
 			log.Printf("No temperature data available between %s and %s", timeline.StartTime, timeline.EndTime)
 		}
 	}
-
-	// log.Println(weatherSamples)
 }
